@@ -1,0 +1,87 @@
+
+fun sizeCheck1(a: List<List<Int>>):Boolean {
+    for (i in 0..<a.size-1){
+        if(a[i].size!=a[i+1].size){
+            return false
+        }
+    }
+ return true    
+}
+
+fun sizeCheck2(b: List<List<Int>>):Boolean {
+    for (i in 0..<b.size-1){
+        if(b[i].size!=b[i+1].size){
+            return false
+        }
+    }
+ return true    
+}
+fun rcCheck(a: List<List<Int>>, b: List<List<Int>>):Boolean{
+    
+    if (a[0].size!=b.size){
+        return false        
+    }
+    return true
+}
+fun matmul( a: List<List<Int>>, b: List<List<Int>>):List<List<Int>> {
+val op = mutableListOf<MutableList<Int>>()
+var row = mutableListOf<Int>()
+var temp0= mutableListOf<Int>()
+var temp1= mutableListOf<Int>()
+var temp2= mutableListOf<Int>()
+   
+    for (l in 0..<a.size){
+       when (l){
+           0 ->row=temp0
+           1 ->row=temp1
+           2 ->row=temp2
+           else -> row=temp0
+       } 
+        for (j in 0..<a.size){
+            var sum = 0
+            for (i in 0..<a[0].size){
+                var prod=a[l][i]*b[i][j]
+                sum+=prod
+            }
+            row.add(sum)
+        }     
+        op.add(row)
+    }
+	return op
+}
+
+fun main() {
+    
+    val m1 = listOf(listOf(1,2,3),listOf(4,5,6),listOf(7,8,9))
+    val m2 = listOf(listOf(4,5,6),listOf(1,2,3),listOf(7,8,9))
+    
+    val en1: Boolean =sizeCheck1(m1)
+    val en2: Boolean =sizeCheck2(m2)
+    val en3: Boolean =rcCheck(m1,m2)
+    val en4: Boolean
+    
+    
+    
+    en4= en1 && en2 && en3
+    if (en1== false){
+        println("ERROR:# of elements in M1 are inconsistant within row(s)")
+    }
+    if (en2== false){
+        println("ERROR:# of elements in M2 are inconsistant within row(s)")
+    }
+    if (en3== false){
+        println("ERROR:# of Columns of M1 are not equal to # of Rows of M2")
+    }
+    if (en4== true ){
+        val mulres = matmul(m1,m2)
+        for (i in 0..<mulres.size){
+       println(mulres[i])
+    }
+    println("TRUE: \n[27, 33, 39]\n[63, 78, 93]\n[99, 123, 147]\n")
+    }
+    
+	
+    
+    
+
+}
