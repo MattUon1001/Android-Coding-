@@ -1,0 +1,205 @@
+
+fun sizeCheck1(a: List<List<Int>>):Boolean { //Checks if each row of M1 contains the same # of elements 
+    for (i in 0..<a.size-1){
+        if(a[i].size!=a[i+1].size){
+            return false
+        }
+    }
+ 	return true    
+}
+
+fun sizeCheck2(b: List<List<Int>>):Boolean {//Checks if each row of M2 contains the same # of elements 
+    for (i in 0..<b.size-1){
+        if(b[i].size!=b[i+1].size){
+            return false
+        }
+    }
+ return true    
+}
+fun rcCheck(a: List<List<Int>>, b: List<List<Int>>):Boolean{// checks if the # of columns of M1 = # of rows in M2
+	var cnt: Int=0
+    for(i in 0..<a.size){
+       if(a[i].size!=b.size){
+       	   cnt+=1             
+       }   
+    }
+    if (cnt==a.size){return false}
+return true
+}
+fun matmul( m1: List<List<Int>>, m2: List<List<Int>>):List<Int> {// multiplies M1 and M2 
+    val op = mutableListOf<MutableList<Int>>()
+	var row =mutableListOf<Int>()
+	var temp0= mutableListOf<Int>()
+    var sum:Int=0
+
+ for (l in 0..<m1.size){// iterates thorugh each row in M1
+//        when (l){// temporary storage for row data 
+//            0 ->row=temp0
+//            1 ->row=temp1
+//            2 ->row=temp2
+//            else -> row=temp0
+//        } 
+       for (j in 0..<m2[0].size){// itereates through each column in M2 
+           var sum = 0
+           for (i in 0..<m1[0].size){//iterates through each element 
+               var prod=m1[l][i]*m2[i][j]
+               sum+=prod
+           }
+            for(k in 0..<m1.size){
+           temp0.add(sum)
+            }
+           row.add(temp0[0])
+       	   temp0.clear()
+           
+//            row.add(sum)
+        }     
+//        for(k in 0..<m1.size){
+           
+           op.add(row)
+       	   
+//        }
+     }
+	return row
+}
+    
+//     for(i in 0..<m1.size){// i= each row in m1, i= each item in m2
+//         sum=0
+//         for (j in 0..<m1[i].size){// j= each element in m1, j= each row in m2
+//             for(k in 0..<m1[i].size){
+//                 var prod=m1[i][j]*m2[j][k]  
+//                 sum+=prod  
+//                 temp0.add(sum)
+//            		row.add(temp0[0])
+//                 temp0.clear()
+//             }
+           
+            
+//         }
+//        op.add(row)
+        
+//     }
+    
+// return op    
+// }    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+//     var temp0= mutableListOf<Int>()
+//     var temp1= mutableListOf<Int>()
+//     var temp2= mutableListOf<Int>()
+
+    
+    
+    
+ 
+//     for (l in 0..<a.size){// iterates thorugh each row in M1
+//        when (l){// temporary storage for row data 
+//            0 ->row=temp0
+//            1 ->row=temp1
+//            2 ->row=temp2
+//            else -> row=temp0
+//        } 
+//        for (j in 0..<a.size){// itereates through each column in M2 
+//            var sum = 0
+//            for (i in 0..<a[0].size){//iterates through each element 
+//                var prod=a[l][i]*b[i][j]
+//                sum+=prod
+//            }
+//            row.add(sum)
+//         }     
+//      	op.add(row)
+//      }
+// 	return op
+// return op
+// }
+
+fun main() {
+    
+    val m1 = listOf(listOf(1,2,3,4),listOf(4,5,6,4),listOf(7,8,9,4))// i/p for M1
+    val m2 = listOf(listOf(4,5,6),listOf(1,2,3),listOf(7,8,9),listOf(4,4,4))// i/p for M2
+//     val m1 = listOf(listOf(1,2,3),listOf(4,5,6),listOf(7,8,9))
+//     val m2 = listOf(listOf(4,5,6),listOf(1,2,3),listOf(7,8,9))
+//     val m1 = listOf(listOf(1,2,3),listOf(4,5,6),listOf(7,8,9))
+//     val m2 = listOf(listOf(4,5),listOf(1,2),listOf(7,8))
+    val en1: Boolean =sizeCheck1(m1)
+    val en2: Boolean =sizeCheck2(m2)
+    val en3: Boolean =rcCheck(m1,m2)
+    val en4: Boolean
+    var cnt: Int=0
+    var cnt2: Int=0
+
+    
+    en4= en1 && en2 && en3
+    if (en1== false){// error message
+       println("ERROR: # of elements in M1 are inconsistant within row(s)\n")
+    }
+    if (en2== false){// error message
+       println("ERROR: # of elements in M2 are inconsistant within row(s)\n")
+    }
+    if (en3== false){// error message
+       println("\nERROR: # of Columns of M1 are not equal to # of Rows of M2\n")
+      
+    }
+    println("M1:")
+    for(a in 0..<m1.size){
+    	print("Row $a:")
+        println(m1[a])
+    }
+    println()
+		
+    println("M2:")
+    for(b in 0..<m2.size){
+    	print("Row $b:")
+        println(m2[b])
+    }
+       println()
+    if (en4== true ){// if all conditions are met proceed to excecute product of M1 and M2 
+       val mulres = matmul(m1,m2)
+       println("COMPUTED ANSWER:") 
+
+	   var colNum: Int=mulres.size/m1.size
+       println(colNum)
+       println(mulres.size)
+        println(mulres)
+      
+
+     
+        for(c in 0..<mulres.size){
+          
+
+           if(c%colNum==0){
+            
+               println()
+               var d: Int=c/colNum
+               print("Row $d: ")
+
+           }
+//            print(c)
+           print(mulres[cnt])
+//            print(cnt2)
+//            print(colNum-1)
+           if (cnt2<colNum-1){
+           		print(", ")
+           }
+           
+           cnt+=1
+           cnt2+=1
+           if (cnt2==colNum){
+               cnt2=0
+           }
+       }
+        
+//        println(mulres.size)
+    }
+    
+    println("\nTRUE ANSWER: \n[27, 33, 39]\n[63, 78, 93]\n[99, 123, 147]\n")
+    
+    }
+    
