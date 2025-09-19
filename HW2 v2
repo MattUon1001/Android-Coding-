@@ -1,0 +1,82 @@
+import kotlin.random.Random
+
+interface GOLBase {
+    fun step()
+    fun isDead(): Boolean
+}
+
+abstract class GOLBaseInt(val width: Int, val height: Int) : GOLBase {
+    abstract var board: MutableList<MutableList<Int>>
+}
+
+abstract class GOLBaseChar(val width: Int, val height: Int) : GOLBase {
+    abstract var board: MutableList<MutableList<Char>>
+}
+
+class GOL(width_in: Int, height_in: Int) : GOLBaseInt(width_in, height_in) {
+    override var board: MutableList<MutableList<Int>>
+
+    init {
+        board = MutableList(height) { MutableList(width) { Random.nextInt(0, 2) } }
+    }
+
+    override fun step() {
+        val newBoard = MutableList(height) { MutableList(width) { 0 } }
+
+        for (i in board.indices) {
+            for (j in board[i].indices) {
+                var cnt = 0
+
+                // Count neighbors
+                for (di in -1..1) {
+                    for (dj in -1..1) {
+                        if (di == 0 && dj == 0) continue
+                        val ni = i + di
+                        val nj = j + dj
+                        if (ni in board.indices && nj in board[i].indices) {
+                            if (board[ni][nj] == 1) cnt++
+                        }
+                    }
+                }
+
+                // Apply Game of Life rules
+                newBoard[i][j] = when {
+                    board[i][j] == 1 && (cnt < 2 || cnt > 3) -> 0
+                    board[i][j] == 0 && cnt == 3 -> 1
+                    else -> board[i][j]
+                }
+            }
+        }
+
+        // Update board
+        board = newBoard
+    }
+
+    override fun isDead(): Boolean {
+        return board.flatten().all { it == 0 }
+    }
+
+    override fun toString(): String {
+        return board.map { row ->
+            row.map { c ->
+                if (c == 0) '.' else '#'
+            }.joinToString("")
+        }.joinToString("\n")
+    }
+}
+
+fun main() {
+    val g = GOL(25, 25)
+    var steps = 0
+    while (!g.isDead() && steps < 100) {
+        println("Step: $steps")
+        println(g)
+        println()
+        g.step()
+        steps += 1
+    }
+    println(g)
+    if (g.isDead()) {
+        println("GAME OVER")
+    }
+}
