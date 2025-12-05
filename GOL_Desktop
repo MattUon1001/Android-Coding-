@@ -1,0 +1,218 @@
+package com.example.ee408_finalprojv3_matthewuon
+
+import androidx.compose.foundation.*
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.window.*
+import kotlinx.coroutines.delay
+import kotlin.random.Random
+import java.io.File
+
+// ======================= GAME LOGIC =======================
+
+interface GOLBase {
+    fun step()
+    fun isDead(): Boolean
+    fun reset()
+}
+
+abstract class GOLBaseInt(val width: Int, val height: Int) : GOLBase {
+    abstract var board: MutableList<MutableList<Int>>
+}
+
+class GOL(width_in: Int, height_in: Int) : GOLBaseInt(width_in, height_in) {
+    override var board: MutableList<MutableList<Int>> =
+        MutableList(height) { MutableList(width) { Random.nextInt(0, 2) } }
+
+    override fun reset() {
+        board = MutableList(board.size) { MutableList(board[0].size) { Random.nextInt(0, 2) } }
+    }
+
+    override fun step() {
+        val newBoard = MutableList(board.size) { MutableList(board[0].size) { 0 } }
+        for (i in board.indices) {
+            for (j in board[i].indices) {
+                var cnt = 0
+                for (i2 in -1..1)
+                    for (j2 in -1..1) {
+                        if (i2 == 0 && j2 == 0) continue
+                        val x = (i + i2 + board.size) % board.size
+                        val y = (j + j2 + board[0].size) % board[0].size
+                        if (board[x][y] == 1) cnt++
+                    }
+
+                newBoard[i][j] = when {
+                    board[i][j] == 1 && (cnt < 2 || cnt > 3) -> 0
+                    board[i][j] == 0 && cnt == 3 -> 1
+                    else -> board[i][j]
+                }
+            }
+        }
+        board = newBoard
+    }
+
+    override fun isDead(): Boolean {
+        return board.flatten().all { it == 0 }
+    }
+}
+
+// ======================= GLOBALS =======================
+
+var row = 15
+var col = 15
+val bd = GOL(col, row)
+val saveFile = File("board.csv")
+
+// ======================= UI =======================
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun App() {
+
+    val boardState = remember { bd.board.map { it.toMutableStateList() }.toMutableStateList() }
+    val en = remember { mutableStateOf(false) }
+    val fast = remember { mutableStateOf(false) }
+    val stepCount = remember { mutableStateOf(0) }
+
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    // ========== SAVE ==========
+    fun saveBoard() {
+        saveFile.bufferedWriter().use { writer ->
+            for (i in boardState.indices) {
+                writer.write(boardState[i].joinToString(","))
+                if (i < boardState.size - 1) writer.newLine()
+            }
+        }
+    }
+
+    // ========== LOAD ==========
+    fun loadBoard() {
+        if (!saveFile.exists()) return
+        val lines = saveFile.readLines()
+        boardState.clear()
+        bd.board.clear()
+
+        for (line in lines) {
+            val row = line.split(",").map { it.toIntOrNull() ?: 0 }.toMutableStateList()
+            boardState.add(row)
+            bd.board.add(row.toMutableList())
+        }
+        stepCount.value = 0
+    }
+
+    // ========== PLAY LOOP ==========
+    LaunchedEffect(en.value, fast.value) {
+        while (en.value) {
+            bd.step()
+            for (i in boardState.indices)
+                for (j in boardState[i].indices)
+                    boardState[i][j] = bd.board[i][j]
+
+            if (!bd.isDead()) stepCount.value++
+
+            delay(if (fast.value) 100 else 300)
+        }
+    }
+
+    // ======================= LAYOUT =======================
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(10.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+
+        Text("Steps: ${stepCount.value}", fontSize = 18.sp)
+
+        val gridSize = 26.dp
+
+        Column {
+            for (i in boardState.indices) {
+                Row {
+                    for (j in boardState[i].indices) {
+                        Box(
+                            modifier = Modifier
+                                .size(gridSize)
+                                .border(1.dp, Color.Black)
+                                .background(if (boardState[i][j] == 1) Color.Green else Color.DarkGray)
+                                .clickable {
+                                    boardState[i][j] = 1 - boardState[i][j]
+                                    bd.board[i][j] = boardState[i][j]
+                                }
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+            Button(onClick = {
+                bd.reset()
+                stepCount.value = 0
+                for (i in boardState.indices)
+                    for (j in boardState[i].indices)
+                        boardState[i][j] = bd.board[i][j]
+            }) { Text("Reset") }
+
+            Button(onClick = {
+                for (i in boardState.indices)
+                    for (j in boardState[i].indices) {
+                        bd.board[i][j] = 0
+                        boardState[i][j] = 0
+                    }
+                stepCount.value = 0
+            }) { Text("Clear") }
+
+            Button(onClick = { saveBoard() }) { Text("Save") }
+            Button(onClick = { loadBoard() }) { Text("Load") }
+        }
+
+        Spacer(modifier = Modifier.height(10.dp))
+
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+
+            Button(onClick = {
+                bd.step()
+                for (i in boardState.indices)
+                    for (j in boardState[i].indices)
+                        boardState[i][j] = bd.board[i][j]
+                if (!bd.isDead()) stepCount.value++
+            }) { Text("Step") }
+
+            Button(
+                interactionSource = interactionSource,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (en.value) Color.Red else Color.Green
+                ),
+                onClick = { en.value = !en.value }
+            ) {
+                Text(if (en.value) "Pause" else "Play")
+            }
+
+            if (isPressed && en.value) {
+                fast.value = true
+            } else {
+                fast.value = false
+            }
+        }
+    }
+}
+
+// ======================= ENTRY POINT =======================
+
+fun main() = application {
+    Window(onCloseRequest = ::exitApplication, title = "WireWorld / Game of Life") {
+        App()
+    }
+}
